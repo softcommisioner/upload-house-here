@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="rw">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SOFT COMISIYONERI - Full Demo</title>
+  <meta name="description" content="Demo y'uburyo bwo gutangaza no gushakisha amazu (Owner & Tenant) - demo yuzuye, na persistence muri browser.">
+  <meta name="robots" content="index,follow">
+  <style>
+    :root{
+      --green:#2e7d32;
+      --bg:#e8f5e9;
+      --white:#ffffff;
+      --muted:#6b6b6b;
+      --card-radius:10px;
+      --max-form-width:380px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter, Arial, sans-serif;background:var(--bg);color:var(--green);-webkit-font-smoothing:antialiased}
+    header{padding:12px 18px;background:linear-gradient(90deg,var(--white),#f1f8f1);border-bottom:1px solid rgba(46,125,50,0.08)}
+    header h1{margin:0;font-size:18px;color:var(--green)}
+    .container{display:flex;gap:12px;padding:18px;height:calc(100vh - 68px)}
+    .side{flex:1;overflow:auto;padding:14px;background:linear-gradient(180deg,rgba(255,255,255,0.9),rgba(255,255,255,0.7));border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.04)}
+    .card{background:var(--white);padding:12px;border-radius:var(--card-radius);border:1px solid rgba(46,125,50,0.08);margin-bottom:12px}
+    h2{margin:0 0 10px 0}
+    label{display:block;margin-top:8px;font-size:13px;color:var(--muted)}
+    input[type="text"], input[type="password"], input[type="number"], select, button, .file-input{
+      display:block;margin-top:6px;padding:10px;border-radius:8px;border:1px solid rgba(46,125,50,0.15);width:100%;max-width:var(--max-form-width);font-size:14px
+    }
+    button{background:var(--green);color:white;border:none;cursor:pointer}
+    .small{width:140px;padding:8px;font-size:13px}
+    .house-card{border-left:4px solid var(--green);padding:10px;margin:8px 0;border-radius:8px;background:#fff}
+    .house-images img{width:100%;border-radius:8px;margin-top:6px}
+    .flex-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .muted{color:var(--muted);font-size:13px}
+    .center{display:flex;justify-content:center;align-items:center}
+    /* Modal */
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;padding:20px;z-index:1000}
+    .modal.show{display:flex}
+    .modal-content{background:var(--white);padding:18px;border-radius:12px;max-width:720px;width:100%;color:var(--green);max-height:90vh;overflow:auto}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    /* Responsive */
+    @media (max-width:900px){ .container{flex-direction:column;height:auto} .grid{grid-template-columns:1fr} .side{height:auto} }
+    /* tiny helpers */
+    .muted-note{font-size:12px;color:#555;margin-top:8px}
+    .preview-img{height:120px;object-fit:cover;border-radius:8px;margin-right:6px}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SOFT COMISIYONERI — Demo (Owner & Tenant)</h1>
+  </header>
+
+  <div class="container" role="main">
+    <!-- Owner Side -->
+    <section class="side" aria-labelledby="ownerTitle">
+      <h2 id="ownerTitle">Owner / Landlord</h2>
+
+      <div class="card">
+        <label>Full Name</label>
+        <input id="ownerName" type="text" placeholder="John Doe">
+        <label>Role</label>
+        <select id="ownerRole">
+          <option value="">Select Role</option>
+          <option value="commissioner">Commissioner</option>
+          <option value="owner">Owner</option>
+        </select>
+        <label>Phone</label>
+        <input id="ownerPhone" type="text" placeholder="+250 78xxxxxxx">
+        <label>Password</label>
+        <input id="ownerPassword" type="password" placeholder="password">
+        <div style="margin-top:8px" class="flex-row">
+          <button onclick="ownerSendCode()">Send Verification Code</button>
+          <button class="small" onclick="seedSampleHouses()">Seed Sample</button>
+        </div>
+        <div id="ownerOtpDiv" style="display:none;margin-top:8px">
+          <label>Enter OTP (demo)</label>
+          <input id="ownerOtpInput" type="text" placeholder="OTP">
+          <div style="margin-top:8px"><button onclick="verifyOwnerOtp()">Verify Owner</button></div>
+        </div>
+        <p id="ownerMsg" class="muted-note"></p>
+      </div>
+
+      <div id="ownerFormCard" class="card" style="display:none">
+        <h3>Post a House</h3>
+        <label>Province</label>
+        <select id="province"></select>
+        <label>District</label>
+        <select id="district"></select>
+        <label>Sector</label>
+        <select id="sector"></select>
+        <label>Village</label>
+        <select id="village"></select>
+
+        <label>House Type</label>
+        <select id="houseType">
+          <option value="">House Type</option>
+          <option>2BR + Living Room</option>
+          <option>1BR + Living Room</option>
+          <option>Commercial</option>
+          <option>Chamber</option>
+        </select>
+
+        <label>Price per Month (RWF)</label>
+        <input id="housePrice" type="number" placeholder="e.g. 50000">
+
+        <label>Photos (multiple)</label>
+        <input id="housePhotos" class="file-input" type="file" accept="image/*" multiple>
+        <div id="photoPreview" class="flex-row" style="margin-top:8px"></div>
+
+        <div style="margin-top:10px"><button onclick="submitHouse()">Submit House</button></div>
+        <p id="ownerMessage" class="muted-note"></p>
+      </div>
+
+      <div class="card">
+        <h3>Owner Dashboard</h3>
+        <div id="ownerHouseList" class="muted"></div>
+        <div style="margin-top:10px"><button onclick="refreshOwnerHouses()">Refresh House List</button></div>
+      </div>
+    </section>
+
+    <!-- Tenant Side -->
+    <section class="side" aria-labelledby="tenantTitle">
+      <h2 id="tenantTitle">Tenant / Renter</h2>
+
+      <div class="card">
+        <label>Full Name</label>
+        <input id="tenantName" type="text" placeholder="Jane Doe">
+        <label>Phone</label>
+        <input id="tenantPhone" type="text" placeholder="+250 78xxxxxxx">
+        <label>Password</label>
+        <input id="tenantPassword" type="password" placeholder="password">
+        <div style="margin-top:8px" class="flex-row">
+          <button onclick="tenantSendCode()">Send Verification Code</button>
+        </div>
+        <div id="tenantOtpDiv" style="display:none;margin-top:8px">
+          <label>Enter OTP (demo)</label>
+          <input id="tenantOtpInput" type="text" placeholder="OTP">
+          <div style="margin-top:8px"><button onclick="verifyTenantOtp()">Verify Tenant</button></div>
+        </div>
+        <p id="tenantMsg" class="muted-note"></p>
+      </div>
+
+      <div id="tenantSearchCard" class="card" style="display:none">
+        <h3>Find a House</h3>
+        <label>Province</label>
+        <select id="tenantProvince"></select>
+        <label>District</label>
+        <select id="tenantDistrict"></select>
+        <label>Sector</label>
+        <select id="tenantSector"></select>
+        <label>Village</label>
+        <select id="tenantVillage"></select>
+        <div style="margin-top:8px" class="flex-row">
+          <button onclick="tenantSearch()">Search</button>
+          <button class="small" onclick="clearFilters()">Clear</button>
+        </div>
+
+        <div id="tenantResults" style="margin-top:12px"></div>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="houseModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-content">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 id="modalType">House</h3>
+        <button onclick="closeModal()" style="background:#eee;color:var(--green);padding:8px;border-radius:8px">Close</button>
+      </div>
+      <p id="modalLocation" class="muted"></p>
+      <p id="modalPrice" class="muted"></p>
+      <div id="modalImages" style="margin-top:8px"></div>
+      <p class="muted-note" style="margin-top:8px">Access Fee: 10% via Mobile Money (demo)</p>
+      <div style="margin-top:10px" class="flex-row">
+        <button onclick="payAccessFee()">Pay & View Contact</button>
+        <button onclick="contactOwner()" style="background:#fff;color:var(--green);border:1px solid var(--green)">Contact Owner</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ======================
+   Demo data structures
+   ====================== */
+const LOCAL_KEY = 'soft_comis_demo_v1';
+let db = {
+  houses: [],
+  users: { owners: [], tenants: [] }
+};
+
+/* Province/District/Sector/Village data (sample) */
+const provinces = ["Kigali","Southern","Eastern","Western","Northern"];
+const districts = {
+  "Kigali":["Gasabo","Kicukiro","Nyarugenge"],
+  "Southern":["Huye","Nyanza"],
+  "Eastern":["Rwamagana","Nyagatare"],
+  "Western":["Karongi","Rusizi"],
+  "Northern":["Musanze","Gicumbi"]
+};
+const sectors = {
+  "Gasabo":["Kimironko","Kacyiru"],
+  "Kicukiro":["Gahanga","Kigarama"],
+  "Nyarugenge":["Nyamirambo","Kiyovu"],
+  "Huye":["Ngoma","Cyangugu"],
+  "Nyanza":["Busasamana","Ruhango"],
+  "Rwamagana":["Rwaza","Gishari"],
+  "Nyagatare":["Rukomo","Matimba"],
+  "Karongi":["Murundi","Gitesi"],
+  "Rusizi":["Bugarama","Nkungu"],
+  "Musanze":["Kigali","Musanze"],
+  "Gicumbi":["Byumba","Kaniga"]
+};
+const villages = {
+  "Kimironko":["Village1","Village2"], "Kacyiru":["Village3","Village4"],
+  "Nyamirambo":["Village5"], "Kiyovu":["Village6"],
+  "Ngoma":["Village7"], "Cyangugu":["Village8"], "Busasamana":["Village9"],
+  "Ruhango":["Village10"], "Rwaza":["Village11"], "Gishari":["Village12"],
+  "Rukomo":["Village13"], "Matimba":["Village14"], "Murundi":["Village15"],
+  "Gitesi":["Village16"], "Bugarama":["Village17"], "Nkungu":["Village18"],
+  "Kigali":["Village19"], "Musanze":["Village20"], "Byumba":["Village21"], "Kaniga":["Village22"]
+};
+
+/* ===== Helpers: localStorage save/load ===== */
+function saveDB(){ localStorage.setItem(LOCAL_KEY, JSON.stringify(db)); }
+function loadDB(){
+  const raw = localStorage.getItem(LOCAL_KEY);
+  if(raw){ try{ db = JSON.parse(raw); } catch(e){ console.warn("failed parse db"); }
+  }
+}
+loadDB();
+
+/* ===== Populate selects ===== */
+function populateDropdown(id, options, placeholder="Select"){
+  const sel = document.getElementById(id);
+  sel.innerHTML = `<option value="">${placeholder}</option>`;
+  options.forEach(o=>{
+    const opt = document.createElement('option'); opt.value = o; opt.text = o; sel.appendChild(opt);
+  });
+}
+populateDropdown('province', provinces, 'Select Province');
+populateDropdown('tenantProvince', provinces, 'Select Province');
+
+/* Wire cascading selects for owner */
+document.getElementById('province').addEventListener('change', function(){
+  populateDropdown('district', districts[this.value] || [], 'Select District');
+  populateDropdown('sector', [], 'Select Sector');
+  populateDropdown('village', [], 'Select Village');
+});
+document.getElementById('district').addEventListener('change', function(){
+  populateDropdown('sector', sectors[this.value] || [], 'Select Sector');
+  populateDropdown('village', [], 'Select Village');
+});
+document.getElementById('sector').addEventListener('change', function(){
+  populateDropdown('village', villages[this.value] || [], 'Select Village');
+});
+
+/* Wire for tenant selects */
+document.getElementById('tenantProvince').addEventListener('change', function(){
+  populateDropdown('tenantDistrict', districts[this.value] || [], 'Select District');
+  populateDropdown('tenantSector', [], 'Select Sector');
+  populateDropdown('tenantVillage', [], 'Select Village');
+});
+document.getElementById('tenantDistrict').addEventListener('change', function(){
+  populateDropdown('tenantSector', sectors[this.value] || [], 'Select Sector');
+  populateDropdown('tenantVillage', [], 'Select Village');
+});
+document.getElementById('tenantSector').addEventListener('change', function(){
+  populateDropdown('tenantVillage', villages[this.value] || [], 'Select Village');
+});
+
+/* ===== OTP demo functions (simulated for UI) ===== */
+let lastOwnerOtp = null;
+let lastTenantOtp = null;
+
+function ownerSendCode(){
+  const phone = document.getElementById('ownerPhone').value.trim();
+  if(!phone){ alert('Andika phone ya owner mbere yo kohereza code'); return; }
+  lastOwnerOtp = (Math.floor(100000 + Math.random()*900000)).toString();
+  document.getElementById('ownerOtpDiv').style.display = 'block';
+  document.getElementById('ownerMsg').innerText = `Demo OTP: ${lastOwnerOtp} (iri demo gusa)`;
+}
+function verifyOwnerOtp(){
+  const val = document.getElementById('ownerOtpInput').value.trim();
+  if(val === lastOwnerOtp){
+    document.getElementById('ownerFormCard').style.display = 'block';
+    document.getElementById('ownerOtpDiv').style.display = 'none';
+    document.getElementById('ownerMsg').innerText = 'Owner verified (demo). Ushobora gutangaza house.';
+    // Save owner to db users (simple)
+    const owner = { name: document.getElementById('ownerName').value || 'Owner', phone: document.getElementById('ownerPhone').value };
+    db.users.owners.push(owner); saveDB();
+  } else alert('OTP siyo. Reba demo OTP message.');
+}
+
+/* Tenant OTP */
+function tenantSendCode(){
+  const phone = document.getElementById('tenantPhone').value.trim();
+  if(!phone){ alert('Andika phone ya tenant mbere yo kohereza code'); return; }
+  lastTenantOtp = (Math.floor(100000 + Math.random()*900000)).toString();
+  document.getElementById('tenantOtpDiv').style.display = 'block';
+  document.getElementById('tenantMsg').innerText = `Demo OTP: ${lastTenantOtp} (demo)`;
+}
+function verifyTenantOtp(){
+  const val = document.getElementById('tenantOtpInput').value.trim();
+  if(val === lastTenantOtp){
+    document.getElementById('tenantSearchCard').style.display = 'block';
+    document.getElementById('tenantOtpDiv').style.display = 'none';
+    document.getElementById('tenantMsg').innerText = 'Tenant verified (demo). Ushobora gushakisha.';
+    db.users.tenants.push({name: document.getElementById('tenantName').value || 'Tenant', phone: document.getElementById('tenantPhone').value});
+    saveDB();
+  } else alert('OTP siyo. Reba demo OTP message.');
+}
+
+/* ===== House photo preview + convert to dataURL for persistence ===== */
+document.getElementById('housePhotos').addEventListener('change', function(e){
+  const files = Array.from(e.target.files);
+  const preview = document.getElementById('photoPreview');
+  preview.innerHTML = '';
+  if(!files.length) return;
+  files.slice(0,6).forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      const img = document.createElement('img'); img.src = ev.target.result; img.className='preview-img';
+      preview.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+});
+
+/* ===== Submit house (owner) ===== */
+function submitHouse(){
+  const province = document.getElementById('province').value;
+  const district = document.getElementById('district').value;
+  const sector = document.getElementById('sector').value;
+  const village = document.getElementById('village').value;
+  const type = document.getElementById('houseType').value;
+  const price = document.getElementById('housePrice').value;
+  if(!province||!district||!sector||!village||!type||!price){ alert('Wuzuze fields zose mbere yo gutangaza'); return; }
+
+  // collect images as dataURLs
+  const files = Array.from(document.getElementById('housePhotos').files);
+  const readPromises = files.map(f => new Promise(res=>{
+    const r = new FileReader();
+    r.onload = ()=>res(r.result);
+    r.readAsDataURL(f);
+  }));
+
+  Promise.all(readPromises).then(images=>{
+    // if none uploaded, use placeholder
+    if(!images.length) images = ["https://via.placeholder.com/600x300?text=No+Image"];
+    const id = Date.now() + Math.floor(Math.random()*999);
+    const house = {
+      id, owner: document.getElementById('ownerName').value || 'Owner',
+      ownerPhone: document.getElementById('ownerPhone').value || '',
+      location: {province,district,sector,village},
+      locationStr: `${province}, ${district}, ${sector}, ${village}`,
+      type, price: Number(price), status: "Available", tenant: null, images
+    };
+    db.houses.push(house);
+    saveDB();
+    document.getElementById('ownerMessage').innerText = 'House posted successfully!';
+    refreshOwnerHouses();
+    // clear form
+    document.getElementById('housePrice').value=''; document.getElementById('houseType').value='';
+    document.getElementById('housePhotos').value=''; document.getElementById('photoPreview').innerHTML='';
+  });
+}
+
+/* ===== Owner dashboard ===== */
+function refreshOwnerHouses(){
+  const list = document.getElementById('ownerHouseList'); list.innerHTML = '';
+  if(!db.houses.length){ list.innerHTML = '<p class="muted">Nta houses zatangajwe</p>'; return; }
+  db.houses.slice().reverse().forEach(h=>{
+    const div = document.createElement('div'); div.className='house-card';
+    div.innerHTML = `<strong>${h.type}</strong><div class="muted">${h.locationStr}</div><div>Price: ${h.price} RWF</div><div>Status: ${h.status}</div>`;
+    const row = document.createElement('div'); row.style.marginTop='8px';
+    if(h.status === 'Available'){
+      const markBtn = document.createElement('button'); markBtn.innerText='Mark as Rented'; markBtn.onclick = ()=>{ h.status='Rented'; saveDB(); refreshOwnerHouses(); tenantSearch(); alert('Marked as Rented'); };
+      row.appendChild(markBtn);
+    }
+    const viewBtn = document.createElement('button'); viewBtn.style.marginLeft='8px'; viewBtn.innerText='View'; viewBtn.onclick = ()=>{ openHouseModalById(h.id); };
+    row.appendChild(viewBtn);
+    div.appendChild(row);
+    list.appendChild(div);
+  });
+}
+
+/* ===== Tenant search ===== */
+function tenantSearch(){
+  const province = document.getElementById('tenantProvince').value;
+  const district = document.getElementById('tenantDistrict').value;
+  const sector = document.getElementById('tenantSector').value;
+  const village = document.getElementById('tenantVillage').value;
+  const results = document.getElementById('tenantResults'); results.innerHTML = '';
+  const filtered = db.houses.filter(h=>{
+    if(h.status !== 'Available') return false;
+    if(province && h.location.province !== province) return false;
+    if(district && h.location.district !== district) return false;
+    if(sector && h.location.sector !== sector) return false;
+    if(village && h.location.village !== village) return false;
+    return true;
+  });
+  if(!filtered.length){ results.innerHTML = '<p class="muted">No available houses</p>'; return; }
+  filtered.forEach(h=>{
+    const div = document.createElement('div'); div.className='house-card';
+    div.innerHTML = `<strong>${h.type}</strong><div class="muted">${h.locationStr}</div><div>Price: ${h.price} RWF</div>`;
+    const btn = document.createElement('button'); btn.style.marginTop='8px'; btn.innerText='View Profile'; btn.onclick = ()=> openHouseModalById(h.id);
+    div.appendChild(btn); results.appendChild(div);
+  });
+}
+
+/* Clear filters */
+function clearFilters(){
+  document.getElementById('tenantProvince').value=''; document.getElementById('tenantDistrict').innerHTML = '<option value="">Select District</option>';
+  document.getElementById('tenantSector').innerHTML = '<option value="">Select Sector</option>'; document.getElementById('tenantVillage').innerHTML = '<option value="">Select Village</option>';
+  document.getElementById('tenantResults').innerHTML = '';
+}
+
+/* ===== Modal logic ===== */
+function openHouseModalById(id){
+  const house = db.houses.find(h=>h.id === id);
+  if(!house) return alert('House not found');
+  document.getElementById('modalType').innerText = house.type;
+  document.getElementById('modalLocation').innerText = house.locationStr;
+  document.getElementById('modalPrice').innerText = `Price: ${house.price} RWF / Month`;
+  const imgDiv = document.getElementById('modalImages'); imgDiv.innerHTML = '';
+  house.images.slice(0,6).forEach(src=>{
+    const img = document.createElement('img'); img.src = src; img.style.width = '100%'; img.style.borderRadius = '8px'; img.style.marginBottom='6px';
+    imgDiv.appendChild(img);
+  });
+  // store current house id on modal
+  const modal = document.getElementById('houseModal'); modal.dataset.currentHouse = id;
+  modal.classList.add('show'); modal.setAttribute('aria-hidden','false');
+}
+function closeModal(){ const modal = document.getElementById('houseModal'); modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); delete modal.dataset.currentHouse; }
+
+/* Pay access fee (demo) */
+function payAccessFee(){
+  const modal = document.getElementById('houseModal');
+  const id = Number(modal.dataset.currentHouse);
+  const house = db.houses.find(h=>h.id === id);
+  if(!house) return alert('House missing');
+  // simulate payment prompt
+  const amount = Math.ceil(house.price * 0.10);
+  const confirmPay = confirm(`Simulate payment of ${amount} RWF (10% of price). Press OK to simulate Mobile Money payment.`);
+  if(!confirmPay) return;
+  house.status = 'Rented';
+  house.tenant = { name: document.getElementById('tenantName').value || 'Tenant', phone: (document.getElementById('tenantPhone').value || 'N/A') };
+  saveDB(); refreshOwnerHouses(); tenantSearch();
+  alert(`Payment simulated. Owner contact: ${house.ownerPhone || 'N/A'}`);
+  closeModal();
+}
+
+/* Direct contact owner (no payment) */
+function contactOwner(){
+  const modal = document.getElementById('houseModal');
+  const id = Number(modal.dataset.currentHouse);
+  const house = db.houses.find(h=>h.id === id);
+  if(!house) return alert('House missing');
+  alert(`Owner: ${house.owner}\nPhone: ${house.ownerPhone || 'N/A'}`);
+}
+
+/* Utility: open seed sample houses */
+function seedSampleHouses(){
+  if(db.houses.length) return alert('Already have houses');
+  const sample = [
+    { id: Date.now()+1, owner:'Alice', ownerPhone:'+250780000001', location:{province:'Kigali',district:'Gasabo',sector:'Kimironko',village:'Village1'}, locationStr:'Kigali, Gasabo, Kimironko, Village1', type:'2BR + Living Room', price:80000, status:'Available', tenant:null, images:['https://via.placeholder.com/600x300?text=House+1'] },
+    { id: Date.now()+2, owner:'Bob', ownerPhone:'+250780000002', location:{province:'Southern',district:'Huye',sector:'Ngoma',village:'Village7'}, locationStr:'Southern, Huye, Ngoma, Village7', type:'1BR + Living Room', price:45000, status:'Available', tenant:null, images:['https://via.placeholder.com/600x300?text=House+2'] }
+  ];
+  db.houses.push(...sample); saveDB(); refreshOwnerHouses(); alert('Sample houses added');
+}
+
+/* On load - render persisted houses */
+refreshOwnerHouses();
+
+/* Expose some functions for development in console (optional) */
+window.db = db;
+window.refreshOwnerHouses = refreshOwnerHouses;
+window.tenantSearch = tenantSearch;
+window.seedSampleHouses = seedSampleHouses;
+
+</script>
+</body>
+</html>
